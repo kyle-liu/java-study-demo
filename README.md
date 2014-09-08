@@ -1,0 +1,2 @@
+存放所有Java事例demo
+该工程使用gradle构建，同时来学习gradle的使用

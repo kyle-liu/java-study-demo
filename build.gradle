@@ -1,0 +1,125 @@
+allprojects {
+    apply plugin: 'idea'
+    apply plugin: 'eclipse'
+    apply plugin: 'maven'
+
+    group = 'com.kyle.demo'
+    version = '1.0-SNAPSHOT'
+}
+
+project(':') {
+    idea {
+        project {
+            jdkName = '1.6'
+            languageLevel = '1.6'
+
+            ipr.withXml { xml ->
+                def mapping = xml.node.component.find { it.@name == "VcsDirectoryMappings" }.mapping
+                mapping.@vcs = 'Git'
+                mapping.@directory = '$PROJECT_DIR$'
+            }
+        }
+    }
+}
+
+idea {
+  module {
+    //配置idea工程排除的文件夹
+    excludeDirs += file('build')
+
+  }
+}
+
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'jacoco'
+    apply plugin: 'maven-publish'
+
+    project.ext {
+        junitVersion = '4.10'
+        mockitoVersion = '1.9.5'
+        jsr305Version = '2.0.2'
+        guavaVersion = '15.0'
+        configVersion = '1.0.2'
+        slf4jVersion = '1.7.5'
+        logbackVersion = '1.0.13'
+        mocoVersion = '0.9'
+        janinoVersion = '2.6.1'
+    }
+
+    repositories {
+        mavenLocal()
+
+        maven { url "http://mvnrepo.taobao.ali.com/mvn/repository" }
+
+        mavenCentral()
+    }
+
+    test {
+        jacoco
+    }
+
+    jacocoTestReport {
+        additionalSourceDirs = files(sourceSets.main.allJava.srcDirs)
+    }
+
+    configurations {
+        provided
+        compileOnly
+    }
+
+    dependencies {
+        if (project.name.endsWith("server")) {
+            compile(
+                    "org.codehaus.janino:janino:$janinoVersion",
+                    "ch.qos.logback:logback-core:$logbackVersion",
+                    "ch.qos.logback:logback-classic:$logbackVersion"
+            )
+        }
+
+        testCompile(
+                "junit:junit:$junitVersion",
+                "org.mockito:mockito-core:$mockitoVersion"
+        )
+    }
+
+    task sourcesJar(type: Jar) {
+        from sourceSets.main.allJava
+        classifier = 'sources'
+    }
+
+    artifacts {
+        archives jar
+        archives sourcesJar
+    }
+
+
+    tasks.withType(JavaCompile) {
+        options.compilerArgs << '-Xlint:unchecked'
+        options.encoding = 'UTF-8'
+    }
+
+    //创建源代码文件夹
+    task initSourceFolders { // add << before { to prevent executing during configuration phase
+       sourceSets*.java.srcDirs*.each { it.mkdirs() }
+       sourceSets*.resources.srcDirs*.each { it.mkdirs() }
+    }
+
+//    jar {
+//        if (baseName.endsWith('server')) {
+//            def matcher = (baseName =~ /lws-([a-z]+)-server/)
+//            def mainClass = "com.laiwang.protocol.${matcher[0][1]}.Main"
+//
+//            from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } } {
+//                exclude "META-INF/*.SF"
+//                exclude "META-INF/*.DSA"
+//                exclude "META-INF/*.RSA"
+//            }
+//
+//            manifest { attributes 'Main-Class': mainClass }
+//        }
+//    }
+
+}
+

@@ -1,0 +1,29 @@
+import java.util.regex.Matcher
+
+include 'demo-spring'
+include 'demo-other'
+include 'demo-netty4'
+rootProject.name = 'java-study-demo'
+
+
+//定义子工程创建的目录位置已经目录名
+rootProject.children.each { project ->
+    switch (project.name) {
+        case ~/demo-([a-z0-9]+)/:
+            String dir = Matcher.lastMatcher[0][1]
+            project.projectDir = new File(settingsDir, dir)
+            break
+        case ~/aether-([a-z]+)/:
+             String dir1=Matcher.lastMatcher[0][1]
+             project.projectDir = new File(settingsDir, "ecosystem/$dir1")
+             break
+        case ~/aether-([a-z]+)-([a-z]+)/:
+            String dir1=Matcher.lastMatcher[0][1]
+            String dir2=Matcher.lastMatcher[0][2]
+            project.projectDir = new File(settingsDir, "ecosystem/$dir1")
+            break
+    }
+
+}
+
+
